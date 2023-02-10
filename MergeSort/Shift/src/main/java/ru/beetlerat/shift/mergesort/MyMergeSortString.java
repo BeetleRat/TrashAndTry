@@ -1,6 +1,12 @@
 package ru.beetlerat.shift.mergesort;
 
-public class MyMergeSortString extends MyMergeSort{
+import ru.beetlerat.shift.fileaccess.AccessFile;
+import ru.beetlerat.shift.fileaccess.ConventionalFileName;
+
+import java.io.File;
+import java.util.*;
+
+public class MyMergeSortString extends MyMergeSort {
     private String[] stringArray;
 
     private void mergeSort(String[] array) {
@@ -67,6 +73,7 @@ public class MyMergeSortString extends MyMergeSort{
             }
         }
     }
+
     @Override
     public StringBuilder sort(StringBuilder sortedString) {
         StringBuilder resultString = new StringBuilder();
@@ -79,5 +86,88 @@ public class MyMergeSortString extends MyMergeSort{
 
         resultString.delete(resultString.length() - 1, resultString.length());
         return resultString;
+    }
+
+    @Override
+    public ConventionalFileName fileSort(ConventionalFileName fileName1, ConventionalFileName fileName2, boolean isFilesStoreInResources, int bufferSize, String outputFilePrefix) {
+
+        ConventionalFileName outputFileName = getOutputConventionalFileName(fileName1,fileName2,outputFilePrefix);
+
+        AccessFile[] accessFile = new AccessFile[3];
+        StringBuilder[] stringBuffer = new StringBuilder[3];
+        stringBuffer[OUTPUT_FILE] = new StringBuilder();
+        for (int i = 0; i < 3; i++) {
+            accessFile[i] = new AccessFile();
+            accessFile[i].setFilesStoreInResources(isFilesStoreInResources);
+        }
+
+        boolean isFirstFileEmpty = false;
+        boolean isSecondFileEmpty = false;
+        Queue<String> firstFileQueue = new ArrayDeque<>();
+        Queue<String> secondFileQueue = new ArrayDeque<>();
+
+
+        boolean isFirstCycle = true;
+        while (!isFirstFileEmpty || !isSecondFileEmpty) {
+            int outputBuilderLinesCount = 0;
+            while (outputBuilderLinesCount < bufferSize) {
+                if (firstFileQueue.isEmpty()) {
+                    if (!isFirstFileEmpty) {
+                        if ((stringBuffer[FIRST_FILE] = accessFile[FIRST_FILE].readFromFiles(bufferSize / 2, Collections.singletonList(fileName1.getFileName()))) == null) {
+                            isFirstFileEmpty = true;
+                        } else {
+                            firstFileQueue.addAll(List.of(stringBuffer[FIRST_FILE].toString().split("\n")));
+                        }
+                    } else {
+                        if (secondFileQueue.isEmpty()) {
+                            if (!isSecondFileEmpty) {
+                                if ((stringBuffer[SECOND_FILE] = accessFile[SECOND_FILE].readFromFiles(bufferSize / 2, Collections.singletonList(fileName2.getFileName()))) == null) {
+                                    isSecondFileEmpty = true;
+                                } else {
+                                    secondFileQueue.addAll(List.of(stringBuffer[SECOND_FILE].toString().split("\n")));
+                                }
+                            } else {
+                                break;
+                            }
+                        } else {
+                            stringBuffer[OUTPUT_FILE].append(secondFileQueue.remove()).append("\n");
+                            outputBuilderLinesCount++;
+                        }
+                    }
+                } else {
+                    if (secondFileQueue.isEmpty()) {
+                        if (!isSecondFileEmpty) {
+                            if ((stringBuffer[SECOND_FILE] = accessFile[SECOND_FILE].readFromFiles(bufferSize / 2, Collections.singletonList(fileName2.getFileName()))) == null) {
+                                isSecondFileEmpty = true;
+                            } else {
+                                secondFileQueue.addAll(List.of(stringBuffer[SECOND_FILE].toString().split("\n")));
+                            }
+                        } else {
+                            stringBuffer[OUTPUT_FILE].append(firstFileQueue.remove()).append("\n");
+                            outputBuilderLinesCount++;
+                        }
+                    } else {
+                        if (firstFileQueue.element().compareTo(secondFileQueue.element()) * ascendingSort > 0) {
+                            stringBuffer[OUTPUT_FILE].append(secondFileQueue.remove()).append("\n");
+                            outputBuilderLinesCount++;
+                        } else {
+                            stringBuffer[OUTPUT_FILE].append(firstFileQueue.remove()).append("\n");
+                            outputBuilderLinesCount++;
+                        }
+                    }
+                }
+            }
+            if (stringBuffer[OUTPUT_FILE].length() > 0) {
+                stringBuffer[OUTPUT_FILE].setLength(stringBuffer[OUTPUT_FILE].length() - 1);
+                if (!isFirstCycle) {
+                    stringBuffer[OUTPUT_FILE].insert(0, "\n");
+                } else {
+                    isFirstCycle = false;
+                }
+                accessFile[0].appendToFile(stringBuffer[OUTPUT_FILE], outputFileName.getFileName());
+                stringBuffer[OUTPUT_FILE].setLength(0);
+            }
+        }
+        return isFirstCycle ? null : outputFileName;
     }
 }

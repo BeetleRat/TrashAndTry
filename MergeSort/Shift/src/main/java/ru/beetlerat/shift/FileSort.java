@@ -4,8 +4,8 @@ import ru.beetlerat.shift.fileaccess.AccessFile;
 import ru.beetlerat.shift.mergesort.MyMergeSort;
 import ru.beetlerat.shift.mergesort.MyMergeSortInt;
 import ru.beetlerat.shift.mergesort.MyMergeSortString;
+import ru.beetlerat.shift.fileaccess.ConventionalFileName;
 
-import java.io.File;
 import java.util.*;
 
 public class FileSort {
@@ -15,13 +15,12 @@ public class FileSort {
     private final int OUTPUT_FILE = 2;
     private final int INPUT_FILE = 3;
 
-    private List<File> outputFilesName;
+    private List<ConventionalFileName> outputFilesName;
     private String tempFileNamePrefix;
 
     private List<String> inputFilesName;
     private boolean[] hasFlag;
     private int ascendingSort;
-    private boolean isFilesStoredInResources;
     private MyMergeSort myMergeSort;
     private AccessFile accessFile;
     private int bufferSize;
@@ -31,19 +30,19 @@ public class FileSort {
         this.inputFilesName = new ArrayList<>();
         this.outputFilesName = new LinkedList<>();
         this.accessFile = new AccessFile();
+        this.accessFile.setFilesStoreInResources(true);
         this.hasFlag = new boolean[4];
         this.tempFileNamePrefix = "";
         this.ascendingSort = 1;
-        this.isFilesStoredInResources=false;
 
 
         if (parseParams(sortParams)) {
 
             createSortedTmpFiles();
             uniteTempFiles();
-            deleteTempFiles();
+            //deleteTempFiles();
 
-            System.out.printf("Program is complete. Result in %s\n",outputFilesName.get(0).getPath());
+            System.out.printf("Program is complete. Result in %s\n", outputFilesName.get(0).getClearFileName());
 
 
         } else {
@@ -54,6 +53,41 @@ public class FileSort {
 
             System.out.printf("Invalid args: %s\nPlease enter the flags according to the template: sort-it.exe -d -s output.txt input1.txt input2.txt", errorMessage);
         }
+    }
+
+    private ConventionalFileName createConventionalFileNameFromFile(String filePath) {
+        AccessFile tempAccessFile = new AccessFile();
+        tempAccessFile.setFilesStoreInResources(accessFile.isFilesStoreInResources());
+
+        String firstString = tempAccessFile.readFirstStringFromFile(filePath);
+        String lastString = tempAccessFile.readLastStringFromFile(filePath);
+        if (firstString == null | lastString == null || firstString.length() == 0 | lastString.length() == 0) {
+            return null;
+        }
+
+        return new ConventionalFileName(firstString.hashCode(), lastString.hashCode(), tempFileNamePrefix);
+    }
+
+    private ConventionalFileName createConventionalFileNameFromStringBuilder(StringBuilder data, int fileCount) {
+        String firstString = null;
+        String lastString = null;
+
+        if (data.indexOf("\n") == -1) {
+            if (data.length() == 0) {
+                return null;
+            } else {
+                firstString = data.toString();
+                lastString = firstString;
+            }
+        } else {
+            firstString = data.substring(0, Math.min(data.indexOf("\n"), 20));
+            lastString = data.substring(data.lastIndexOf("\n") + 1, data.length());
+        }
+        if (firstString == null | lastString == null || firstString.length() == 0 | lastString.length() == 0) {
+            return null;
+        }
+
+        return new ConventionalFileName(firstString.hashCode(), lastString.hashCode(), tempFileNamePrefix + "_" + fileCount);
     }
 
     private boolean parseParams(String[] params) {
@@ -86,9 +120,14 @@ public class FileSort {
                 default:
                     if (param.endsWith(".txt")) {
                         if (!hasFlag[OUTPUT_FILE]) {
-                            hasFlag[OUTPUT_FILE] = true;
-                            outputFilesName.add(new File(param));
                             tempFileNamePrefix = param.substring(0, param.length() - 4);
+                            ConventionalFileName mainOutputFileName = new ConventionalFileName(0, 0, tempFileNamePrefix);
+                            hasFlag[OUTPUT_FILE] = accessFile.writeToFile(new StringBuilder(), mainOutputFileName.getClearFileName());
+                            if (hasFlag[OUTPUT_FILE]) {
+                                outputFilesName.add(mainOutputFileName);
+                            } else {
+                                tempFileNamePrefix = "";
+                            }
                         } else {
                             hasFlag[INPUT_FILE] = true;
                             inputFilesName.add(param);
@@ -104,66 +143,73 @@ public class FileSort {
     }
 
     private void createSortedTmpFiles() {
-        StringBuilder sortedSting = new StringBuilder();
-
-        while (accessFile.readFromFiles(sortedSting,
-                isFilesStoredInResources, bufferSize,
-                inputFilesName)) {
-            createTmpFile(sortedSting);
-            sortedSting.setLength(0);
-        }
-        if (sortedSting.length() > 0) {
-            createTmpFile(sortedSting);
-            sortedSting.setLength(0);
+        StringBuilder sortSting;
+        while ((sortSting = accessFile.readFromFiles(bufferSize, inputFilesName)) != null) {
+            createTmpFile(sortSting);
+            sortSting.setLength(0);
         }
     }
+
 
     private void createTmpFile(StringBuilder sortedSting) {
         StringBuilder resultSting = myMergeSort.sort(sortedSting);
 
-        int i = outputFilesName.size() - 1;
-        AccessFile tempAccessFile = new AccessFile();
-        while (i > 0) {
-            String firstStringFromFile = tempAccessFile.readFirstStringFromFile(isFilesStoredInResources, outputFilesName.get(i).getPath());
-            if (firstStringFromFile.compareTo(resultSting.toString()) * ascendingSort < 0) {
-                outputFilesName.add(i + 1, new File(tempFileNamePrefix + "Temp" + outputFilesName.size() + ".txt"));
-                tempAccessFile.writeToFile(resultSting, isFilesStoredInResources, outputFilesName.get(i + 1).getPath());
-                break;
+        ConventionalFileName tempFileName = createConventionalFileNameFromStringBuilder(resultSting, outputFilesName.size());
+
+        if (tempFileName != null) {
+            int index = outputFilesName.size() - 1;
+            while (index > 0) {
+                if (outputFilesName.get(index).compareTo(tempFileName)  > 0) {
+                    outputFilesName.add(index +1, tempFileName);
+                    break;
+                }
+                index--;
             }
-            i--;
-        }
-        if (i == 0) {
-            outputFilesName.add(i + 1, new File(tempFileNamePrefix + "Temp" + outputFilesName.size() + ".txt"));
-            tempAccessFile.writeToFile(resultSting, isFilesStoredInResources, outputFilesName.get(i + 1).getPath());
+            if (index == 0) {
+                outputFilesName.add(index + 1, tempFileName);
+            }
+
+            AccessFile tempAccessFile = new AccessFile();
+            tempAccessFile.setFilesStoreInResources(accessFile.isFilesStoreInResources());
+            accessFile.writeToFile(resultSting, tempFileName.getFileName());
         }
     }
 
     private void uniteTempFiles() {
-        String mainOutputFile = outputFilesName.get(RESULT_FILE).getPath();
-        StringBuilder outBuilder = new StringBuilder();
-
-        // Очистить выходной файл
-        accessFile.clearCurrentReadString();
-        accessFile.writeToFile(outBuilder, isFilesStoredInResources, mainOutputFile);
-
-        for (int i = 1; i < outputFilesName.size(); i++) {
-
-            File tempFile = outputFilesName.get(i);
-            accessFile.clearCurrentReadString();
-            while (accessFile.readFromFiles(outBuilder, isFilesStoredInResources, bufferSize, Collections.singletonList(tempFile.getPath()))) {
-                accessFile.appendToFile(outBuilder, isFilesStoredInResources, mainOutputFile);
-                outBuilder.setLength(0);
+        String mainOutputFile = outputFilesName.get(RESULT_FILE).getClearFileName();
+        int index = 1;
+        while (index < outputFilesName.size() - 1) {
+            ConventionalFileName newSortFile = myMergeSort.fileSort(outputFilesName.get(index), outputFilesName.get(index + 1), accessFile.isFilesStoreInResources(), bufferSize, tempFileNamePrefix + "_" + outputFilesName.size());
+            if (newSortFile != null) {
+                outputFilesName.add(newSortFile);
             }
-            if (outBuilder.length() > 0) {
-                accessFile.appendToFile(outBuilder, isFilesStoredInResources, mainOutputFile);
-                outBuilder.setLength(0);
+            for(int i=0;i<2;i++){
+                accessFile.deleteFile(outputFilesName.get(index).getFileName());
+                outputFilesName.remove(index);
             }
+            //index += 2;
         }
+        accessFile.clearCurrentReadString();
+        AccessFile writeFile = new AccessFile();
+        writeFile.setFilesStoreInResources(accessFile.isFilesStoreInResources());
+        StringBuilder buffer;
+        boolean isFirstCycle = true;
+        while ((buffer = accessFile.readFromFiles(bufferSize, Collections.singletonList(outputFilesName.get(index).getFileName()))) != null) {
+            if (isFirstCycle) {
+                isFirstCycle = false;
+            } else {
+                buffer.insert(0, "\n");
+            }
+            writeFile.appendToFile(buffer, mainOutputFile);
+        }
+        accessFile.deleteFile(outputFilesName.get(index).getFileName());
+        outputFilesName.remove(index);
+
     }
 
     private void deleteTempFiles() {
         for (int i = outputFilesName.size() - 1; i >= 1; i--) {
-            accessFile.deleteFile(isFilesStoredInResources, outputFilesName.get(i).getPath());
+            accessFile.deleteFile(outputFilesName.get(i).getFileName());
         }
     }
 }

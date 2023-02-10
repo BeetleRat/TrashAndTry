@@ -14,7 +14,7 @@ public class Shift {
     // 3. имя выходного файла, обязательное;
     // 4. остальные параметры – имена входных файлов, не менее одного.
     public static void main(String[] args) {
-        new FileSort(args,100);
+        new FileSort(args,2);
 
 
     }

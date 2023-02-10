@@ -11,113 +11,127 @@ import java.util.Collections;
 import java.util.List;
 
 public class AccessFile {
-    private Path resourceDirectory;
+    private final Path resourceDirectory;
     private ReadStringCounter currentReadLine;
+    private boolean isFilesStoreInResources;
 
     public AccessFile() {
         this.currentReadLine = new ReadStringCounter();
+        this.isFilesStoreInResources = true;
+        this.resourceDirectory = getResourcesDirectory();
+    }
 
-        // Получаем путь к директории resources
-        if (getClass().getClassLoader().getResource("") != null) {
-            try {
-                this.resourceDirectory = Paths.get(getClass().getClassLoader().getResource("").toURI());
-            } catch (InvalidPathException | URISyntaxException e) {
-                this.resourceDirectory = null;
-                System.out.println("Could not get resources directory: " + e);
-            }
-        } else {
-            this.resourceDirectory = null;
-            System.out.println("Could not get resources directory");
-        }
+    public boolean isFilesStoreInResources() {
+        return isFilesStoreInResources;
+    }
 
+    public void setFilesStoreInResources(boolean filesStoreInResources) {
+        isFilesStoreInResources = filesStoreInResources;
     }
 
     public void clearCurrentReadString() {
         this.currentReadLine.clear();
     }
 
-    public String readFirstStringFromFile( boolean isFilesStoreInResources, String fileName) {
+    public String readFirstStringFromFile(String fileName) {
         currentReadLine.clear();
-        StringBuilder firstStringFromFile=new StringBuilder();
-        readFromFiles(firstStringFromFile, isFilesStoreInResources, 1, Collections.singletonList(fileName));
-        return firstStringFromFile.toString();
+        StringBuilder resultString = readFromFiles(1, Collections.singletonList(fileName));
+        return resultString == null ? null : resultString.toString();
     }
 
-    public boolean readFromFiles(StringBuilder stringFromFile, boolean isFilesStoreInResources, List<String> fileNames) {
+    public String readLastStringFromFile(String fileName) {
+        if (isFilesStoreInResources & resourceDirectory == null) {
+            System.out.println("Error! Could not get resources directory.");
+            return null;
+        }
 
+        File file = new File(isFilesStoreInResources ? resourceDirectory + "/" + fileName : fileName);
+        String result = null;
+        try (RandomAccessFile readableFile = new RandomAccessFile(file, "r")) {
+            long lineNumber = file.length() - 1;
+            while (result == null || result.length() == 0) {
+                readableFile.seek(lineNumber);
+                readableFile.readLine();
+                result = readableFile.readLine();
+                lineNumber--;
+            }
+        } catch (FileNotFoundException e) {
+            System.out.printf("Error! Could not open file: %s\n", file.getPath());
+            return null;
+        } catch (IOException e) {
+            System.out.printf("Error! Could write data to file: %s\n", file.getPath());
+            return null;
+        }
+
+        return result;
+    }
+
+    public StringBuilder readFromFiles(List<String> fileNames) {
         clearCurrentReadString();
-
-        readFromFiles(stringFromFile, isFilesStoreInResources, Integer.MAX_VALUE, fileNames);
-
-        return currentReadLine.getTotalLinesRead() >= Integer.MAX_VALUE;
+        return readFromFiles(Integer.MAX_VALUE, fileNames);
     }
 
-    public boolean readFromFiles(StringBuilder stringFromFile, boolean isFilesStoreInResources, int lines, List<String> fileNames) {
+    public StringBuilder readFromFiles(int lines, List<String> fileNames) {
+        StringBuilder resultString = new StringBuilder();
+
+        if (isFilesStoreInResources & resourceDirectory == null) {
+            System.out.println("Error! Could not get resources directory.");
+            return null;
+        }
+
         long maxReadStrings = Math.max(lines, 0) + currentReadLine.getTotalLinesRead();
         int fileIndex = currentReadLine.getFileID();
 
-        if (isFilesStoreInResources) {
-            while (fileIndex < fileNames.size() & currentReadLine.getTotalLinesRead() < maxReadStrings) {
-                // Получить файл из папки с ресурсами
-                if (resourceDirectory != null) {
-                    File readableFile = new File(resourceDirectory + "/" + fileNames.get(fileIndex));
-                    fileToStringBuilder(readableFile.getPath(), stringFromFile, maxReadStrings);
-                    fileIndex = currentReadLine.getFileID();
-                } else {
-                    System.out.printf("Error! Could not find file in resources: %s\n", fileNames.get(fileIndex));
-                    return false;
-                }
+        while (fileIndex < fileNames.size() & currentReadLine.getTotalLinesRead() < maxReadStrings) {
+            StringBuilder readFromFile = fileToStringBuilder(isFilesStoreInResources ? resourceDirectory + "/" + fileNames.get(fileIndex) : fileNames.get(fileIndex), maxReadStrings);
+            if (readFromFile != null) {
+                resultString.append(readFromFile);
+            } else {
+                currentReadLine.increaseFileID();
             }
-        } else {
-            while (fileIndex < fileNames.size() & currentReadLine.getTotalLinesRead() < maxReadStrings) {
-                fileToStringBuilder(fileNames.get(fileIndex), stringFromFile, maxReadStrings);
-                fileIndex = currentReadLine.getFileID();
-            }
+            fileIndex = currentReadLine.getFileID();
         }
 
-        return fileIndex < fileNames.size();
+        if (resultString.length() == 0) {
+            return null;
+        } else {
+            resultString.setLength(resultString.length() - 1);
+            return resultString;
+        }
     }
 
-    public void writeToFile(StringBuilder stringToFile, boolean isFileStoreInResources, String fileName) {
-        writeToFile(stringToFile, isFileStoreInResources, fileName, false);
+    public boolean writeToFile(StringBuilder stringToFile, String fileName) {
+        return writeToFile(stringToFile, fileName, false);
     }
 
-    public void appendToFile(StringBuilder stringToFile, boolean isFileStoreInResources, String fileName) {
-        writeToFile(stringToFile, isFileStoreInResources, fileName, true);
+    public boolean appendToFile(StringBuilder stringToFile, String fileName) {
+        return writeToFile(stringToFile, fileName, true);
     }
 
-    public boolean deleteFile(boolean isFileStoreInResources, String fileName){
+    public boolean deleteFile(String fileName) {
         try {
-            if(isFileStoreInResources){
-                Files.delete(Paths.get(resourceDirectory+"/"+fileName));
-            }
-            else {
-                Files.delete(Paths.get(fileName));
-            }
+            Files.delete(Paths.get(isFilesStoreInResources ? resourceDirectory + "/" + fileName : fileName));
         } catch (IOException e) {
-            System.out.printf("Can not delete file: %s\n",fileName);
+            System.out.printf("Can not delete file: %s\n", fileName);
             System.out.println(e);
             return false;
         }
         return true;
     }
 
-    private void writeToFile(StringBuilder stringToFile, boolean isFileStoreInResources, String fileName, boolean append) {
+    private boolean writeToFile(StringBuilder stringToFile, String fileName, boolean append) {
         File writableFile;
-        if (isFileStoreInResources) {
-            if (resourceDirectory != null) {
-                writableFile = new File(resourceDirectory + "/" + fileName);
-                stringBuilderToFile(stringToFile, writableFile, append);
-            } else {
-                System.out.println("Error! Could not get resources directory.");
-            }
-        } else {
-            writableFile = new File(fileName);
-            stringBuilderToFile(stringToFile, writableFile, append);
+
+        if (isFilesStoreInResources & resourceDirectory == null) {
+            System.out.println("Error! Could not get resources directory.");
+            return false;
         }
+
+        writableFile = new File(isFilesStoreInResources ? resourceDirectory + "/" + fileName : fileName);
+        return stringBuilderToFile(stringToFile, writableFile, append);
     }
 
-    private void stringBuilderToFile(StringBuilder stringBuilder, File file, boolean append) {
+    private boolean stringBuilderToFile(StringBuilder stringBuilder, File file, boolean append) {
         try {
             if (!file.exists()) {
                 file.createNewFile();
@@ -134,12 +148,17 @@ public class AccessFile {
             writeFileBuffer.close();
         } catch (FileNotFoundException e) {
             System.out.printf("Error! Could not open file: %s\n", file.getPath());
+            return false;
         } catch (IOException e) {
             System.out.printf("Error! Could write data to file: %s\n", file.getPath());
+            return false;
         }
+        return true;
     }
 
-    private void fileToStringBuilder(String filePath, StringBuilder stringBuilder, long maxReadStrings) {
+    private StringBuilder fileToStringBuilder(String filePath, long maxReadStrings) {
+        StringBuilder resultString = new StringBuilder();
+
         try {
             BufferedReader readFileBuffer =
                     new BufferedReader(
@@ -155,7 +174,7 @@ public class AccessFile {
             String oneLine;
             while ((oneLine = readFileBuffer.readLine()) != null & currentReadLine.getTotalLinesRead() < maxReadStrings) {
                 currentReadLine.increaseLine();
-                stringBuilder.append(oneLine).append("\n");
+                resultString.append(oneLine).append("\n");
             }
             if (currentReadLine.getTotalLinesRead() < maxReadStrings) {
                 currentReadLine.increaseFileID();
@@ -163,8 +182,27 @@ public class AccessFile {
             readFileBuffer.close();
         } catch (FileNotFoundException e) {
             System.out.printf("Error! Could not open file: %s\n", filePath);
+            return null;
         } catch (IOException e) {
             System.out.printf("Error! Could not get data from file: %s\n", filePath);
+            return null;
         }
+
+        return resultString;
+    }
+
+    private Path getResourcesDirectory() {
+        Path resourcesDirectoryPath = null;
+        if (getClass().getClassLoader().getResource("") != null) {
+            try {
+                resourcesDirectoryPath = Paths.get(getClass().getClassLoader().getResource("").toURI());
+            } catch (InvalidPathException | URISyntaxException e) {
+                System.out.println("Warning. Could not get resources directory: " + e);
+            }
+        } else {
+            System.out.println("Warning. Could not get resources directory");
+        }
+
+        return resourcesDirectoryPath;
     }
 }
