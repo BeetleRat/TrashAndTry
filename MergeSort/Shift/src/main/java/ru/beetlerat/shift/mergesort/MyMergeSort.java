@@ -9,17 +9,19 @@ public abstract class MyMergeSort {
     public static final int ASCENDING_SORT = 1;
     public static final int DESCENDING_SORT = -1;
 
-    private final int OUTPUT_FILE = 2;
     private final int FIRST_FILE = 0;
     private final int SECOND_FILE = 1;
+    private final int OUTPUT_FILE = 2;
 
     protected int ascendingSort;
+    protected boolean withoutSpaces;
 
     private List<ConventionalFileName> outputFilesName;
     private AccessFile[] accessFile;
     private String outputFilePrefix;
     private StringBuilder[] dataBuffer;
     private boolean isFilesStoreInResources;
+    private boolean saveTmpFiles;
     private boolean[] isFileEmpty;
     private List<Queue> fileQueue;
     private int bufferSize;
@@ -27,6 +29,8 @@ public abstract class MyMergeSort {
     public MyMergeSort() {
         this.bufferSize = 100;
         this.ascendingSort = ASCENDING_SORT;
+        this.saveTmpFiles = false;
+        this.withoutSpaces = false;
 
         this.outputFilePrefix = "";
         this.isFilesStoreInResources = true;
@@ -60,8 +64,10 @@ public abstract class MyMergeSort {
     private void createTmpFiles(List<String> inputFilesName) {
         StringBuilder sortSting;
         while ((sortSting = accessFile[FIRST_FILE].readFromFiles(bufferSize, inputFilesName)) != null) {
+
             StringBuilder resultSting = arrayToStringBuilder(mergeSort(convertReadDataToArray(sortSting)));
-            ConventionalFileName tempFileName = createConventionalFileNameFromStringBuilder(resultSting, outputFilesName.size());
+
+            ConventionalFileName tempFileName = ConventionalFileName.createConventionalFileNameFromStringBuilder(resultSting, outputFilePrefix, outputFilesName.size());
 
             if (tempFileName != null) {
                 int index = outputFilesName.size() - 1;
@@ -154,31 +160,44 @@ public abstract class MyMergeSort {
     }
 
     private void outMergeSort() {
-
         int index = 0;
         while (index < outputFilesName.size() - 1) {
             ConventionalFileName newSortFile = uniteSortedFiles(outputFilesName.get(index), outputFilesName.get(index + 1));
             if (newSortFile != null) {
                 outputFilesName.add(newSortFile);
             }
-            for (int i = 0; i < 2; i++) {
-                accessFile[OUTPUT_FILE].deleteFile(outputFilesName.get(index).getFileName());
-                outputFilesName.remove(index);
+            if (saveTmpFiles) {
+                index += 2;
+            } else {
+                for (int i = 0; i < 2; i++) {
+                    accessFile[OUTPUT_FILE].deleteFile(outputFilesName.get(index).getFileName());
+                    outputFilesName.remove(index);
+                }
             }
-            //index += 2;
         }
         String outputFileName = outputFilePrefix + ".txt";
         if (accessFile[OUTPUT_FILE].renameFile(outputFilesName.get(index).getFileName(), outputFileName)) {
-            System.out.printf("Program completed. Results in file: %s", outputFileName);
+            System.out.printf("\nProgram completed. Results in file: %s", outputFileName);
         }
         accessFile[OUTPUT_FILE].clearCurrentReadString();
-
     }
 
     public ConventionalFileName uniteSortedFiles(ConventionalFileName fileName1, ConventionalFileName fileName2) {
 
-        ConventionalFileName outputFileName = getOutputConventionalFileName(fileName1, fileName2, outputFilePrefix + "_" + outputFilesName.size());
+        ConventionalFileName outputFileName =
+                ConventionalFileName.createConventionalFileNameFromOtherNames(
+                        fileName1,
+                        fileName2,
+                        ascendingSort,
+                        outputFilePrefix + "_" + outputFilesName.size()
+                );
+
         clearOldFileReadData();
+
+        for (int i = 0; i < 8; i++) {
+            System.out.print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+        }
+        System.out.printf("Out of buffer. Perform out merge sort. Current file: %s", outputFileName.getFileName());
 
         boolean isFirstCycle = true;
         while (!isFileEmpty[FIRST_FILE] || !isFileEmpty[SECOND_FILE]) {
@@ -258,34 +277,6 @@ public abstract class MyMergeSort {
         }
     }
 
-    protected ConventionalFileName getOutputConventionalFileName(ConventionalFileName fileName1, ConventionalFileName fileName2, String outputFilePrefix) {
-        return new ConventionalFileName(fileName1.getMinFileNumber() * ascendingSort > fileName2.getMinFileNumber() * ascendingSort ? fileName1.getMinFileNumber() : fileName2.getMinFileNumber(),
-                fileName1.getMaxFileNumber() * ascendingSort > fileName2.getMaxFileNumber() * ascendingSort ? fileName1.getMaxFileNumber() : fileName2.getMaxFileNumber(),
-                outputFilePrefix);
-    }
-
-    private ConventionalFileName createConventionalFileNameFromStringBuilder(StringBuilder data, int fileCount) {
-        String firstString = null;
-        String lastString = null;
-
-        if (data.indexOf("\n") == -1) {
-            if (data.length() == 0) {
-                return null;
-            } else {
-                firstString = data.toString();
-                lastString = firstString;
-            }
-        } else {
-            firstString = data.substring(0, Math.min(data.indexOf("\n"), 20));
-            lastString = data.substring(data.lastIndexOf("\n") + 1, data.length());
-        }
-        if (firstString == null | lastString == null || firstString.length() == 0 | lastString.length() == 0) {
-            return null;
-        }
-
-        return new ConventionalFileName(firstString.hashCode(), lastString.hashCode(), outputFilePrefix + "_" + fileCount);
-    }
-
     private StringBuilder arrayToStringBuilder(Object[] array) {
         StringBuilder stringBuilder = new StringBuilder();
         for (Object object : array) {
@@ -311,6 +302,14 @@ public abstract class MyMergeSort {
         return isFilesStoreInResources;
     }
 
+    public boolean isSaveTmpFiles() {
+        return saveTmpFiles;
+    }
+
+    public boolean isWithoutSpaces() {
+        return withoutSpaces;
+    }
+
     public void setAscendingSort(int ascendingSort) {
         this.ascendingSort = ascendingSort;
     }
@@ -328,5 +327,13 @@ public abstract class MyMergeSort {
 
     public void setOutputFilePrefix(String outputFilePrefix) {
         this.outputFilePrefix = outputFilePrefix;
+    }
+
+    public void setSaveTmpFiles(boolean saveTmpFiles) {
+        this.saveTmpFiles = saveTmpFiles;
+    }
+
+    public void setWithoutSpaces(boolean withoutSpaces) {
+        this.withoutSpaces = withoutSpaces;
     }
 }

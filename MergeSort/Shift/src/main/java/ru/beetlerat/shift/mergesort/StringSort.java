@@ -17,12 +17,30 @@ public class StringSort extends MyMergeSort {
 
     @Override
     protected Collection<String> convertReadDataToCollection(StringBuilder data) {
-        return List.of(data.toString().split("\n"));
+        return convertReadDataToArrayList(data);
     }
 
     @Override
     protected Object[] convertReadDataToArray(StringBuilder data) {
-        return data.toString().split("\n");
+        ArrayList<String> stringArrayList = convertReadDataToArrayList(data);
+        String[] stringsArray = new String[stringArrayList.size()];
+        for (int i = 0; i < stringArrayList.size(); i++) {
+            stringsArray[i] = stringArrayList.get(i);
+        }
+        return stringsArray;
+    }
+
+    private ArrayList<String> convertReadDataToArrayList(StringBuilder data) {
+        ArrayList<String> stringList = new ArrayList<>(List.of(data.toString().split("\n")));
+        if (withoutSpaces) {
+            for (int i = stringList.size() - 1; i >= 0; i--) {
+                if (stringList.get(i).contains(" ")) {
+                    System.out.printf("Warning. String have spaces \"%s\". It will not be included in the final result.\n", stringList.get(i));
+                    stringList.remove(i);
+                }
+            }
+        }
+        return stringList;
     }
 
     @Override

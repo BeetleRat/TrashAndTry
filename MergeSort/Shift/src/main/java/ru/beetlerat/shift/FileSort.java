@@ -8,7 +8,6 @@ import java.util.*;
 
 public class FileSort {
     private final int SORT_TYPE = 0;
-    private final int RESULT_FILE = 0;
     private final int DATA_TYPE = 1;
     private final int OUTPUT_FILE = 2;
     private final int INPUT_FILE = 3;
@@ -43,7 +42,7 @@ public class FileSort {
     // 3. имя выходного файла, обязательное;
     // 4. остальные параметры – имена входных файлов, не менее одного.
     private boolean parseParams(String[] params) {
-        int ascendingSort = 1;
+        int ascendingSort = MyMergeSort.ASCENDING_SORT;
         String outputFileNamePrefix = "";
         for (String param : params) {
             switch (param) {
@@ -55,7 +54,7 @@ public class FileSort {
                 case "-d":
                     if (!hasFlag[SORT_TYPE]) {
                         hasFlag[SORT_TYPE] = true;
-                        ascendingSort = -1;
+                        ascendingSort = MyMergeSort.DESCENDING_SORT;
                     }
                     break;
                 case "-s":
@@ -88,6 +87,8 @@ public class FileSort {
             this.myMergeSort.setFilesStoreInResources(isFilesStoreInResources);
             this.myMergeSort.setBufferSize(bufferSize);
             this.myMergeSort.setOutputFilePrefix(outputFileNamePrefix);
+            this.myMergeSort.setSaveTmpFiles(false);
+            this.myMergeSort.setWithoutSpaces(true);
         }
         return hasFlag[DATA_TYPE] & hasFlag[OUTPUT_FILE] & hasFlag[INPUT_FILE];
     }

@@ -155,7 +155,6 @@ public class AccessFile {
                 file.createNewFile();
             }
 
-            // Создаем объект BufferedReader для чтения файла filePath с кодировкой UTF_8
             BufferedWriter writeFileBuffer =
                     new BufferedWriter(
                             new OutputStreamWriter(
