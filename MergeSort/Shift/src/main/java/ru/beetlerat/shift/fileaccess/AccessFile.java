@@ -66,9 +66,18 @@ public class AccessFile {
         return result;
     }
 
+    public StringBuilder readFromFile(String fileName) {
+        clearCurrentReadString();
+        return readFromFiles(Integer.MAX_VALUE, Collections.singletonList(fileName));
+    }
+
     public StringBuilder readFromFiles(List<String> fileNames) {
         clearCurrentReadString();
         return readFromFiles(Integer.MAX_VALUE, fileNames);
+    }
+
+    public StringBuilder readFromFile(int lines, String fileName) {
+        return readFromFiles(lines, Collections.singletonList(fileName));
     }
 
     public StringBuilder readFromFiles(int lines, List<String> fileNames) {
@@ -117,6 +126,15 @@ public class AccessFile {
             return false;
         }
         return true;
+    }
+
+    public boolean renameFile(String fileName, String newName) {
+        File file = new File(isFilesStoreInResources ? resourceDirectory + "/" + fileName : fileName);
+        File renamedFile = new File(isFilesStoreInResources ? resourceDirectory + "/" + newName : newName);
+        if (renamedFile.exists()) {
+            deleteFile(newName);
+        }
+        return file.renameTo(renamedFile);
     }
 
     private boolean writeToFile(StringBuilder stringToFile, String fileName, boolean append) {

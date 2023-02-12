@@ -9,19 +9,22 @@ public class ConventionalFileName implements Comparable<ConventionalFileName> {
     public ConventionalFileName(int minFileNumber, int maxFileNumber, String fileNamePrefix) {
         this.minFileNumber = minFileNumber;
         this.maxFileNumber = maxFileNumber;
-        this.fileName = fileNamePrefix+"_"+minFileNumber+"!"+maxFileNumber+".txt";
-        this.clearFileName=fileNamePrefix+".txt";
+        this.fileName = fileNamePrefix + "_" + minFileNumber + "!" + maxFileNumber + ".txt";
+        this.clearFileName = fileNamePrefix + ".txt";
     }
 
     public int getMinFileNumber() {
         return minFileNumber;
     }
+
     public int getMaxFileNumber() {
         return maxFileNumber;
     }
+
     public String getFileName() {
         return fileName;
     }
+
     public String getClearFileName() {
         return clearFileName;
     }
@@ -29,16 +32,18 @@ public class ConventionalFileName implements Comparable<ConventionalFileName> {
     public void setMinFileNumber(int minFileNumber) {
         this.minFileNumber = minFileNumber;
     }
+
     public void setMaxFileNumber(int maxFileNumber) {
         this.maxFileNumber = maxFileNumber;
     }
+
     public void setFileName(String fileNamePrefix) {
-        this.fileName = fileNamePrefix+"_"+minFileNumber+"!"+maxFileNumber+".txt";
-        this.clearFileName=fileNamePrefix+".txt";
+        this.fileName = fileNamePrefix + "_" + minFileNumber + "!" + maxFileNumber + ".txt";
+        this.clearFileName = fileNamePrefix + ".txt";
     }
 
     @Override
     public int compareTo(ConventionalFileName o) {
-        return o.getMinFileNumber()-this.minFileNumber;
+        return o.getMinFileNumber() - this.minFileNumber;
     }
 }
