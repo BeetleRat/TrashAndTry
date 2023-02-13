@@ -9,8 +9,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class AccessFile {
+    private static final String PROPERTIES_FILE_NAME = "application.properties";
     private final Path resourceDirectory;
     private ReadStringCounter currentReadLine;
     private boolean isFilesStoreInResources;
@@ -135,6 +139,32 @@ public class AccessFile {
             deleteFile(newName);
         }
         return file.renameTo(renamedFile);
+    }
+
+    public void readProperties(AtomicInteger bufferSize, AtomicBoolean saveTmpFiles, AtomicBoolean withoutSpaces) {
+        // Устанавливаем значения по умолчанию
+        bufferSize.set(2500000);
+        saveTmpFiles.set(false);
+        withoutSpaces.set(true);
+
+        // Считываем значения из свойств
+        String filePath = isFilesStoreInResources
+                ? resourceDirectory + "/" + PROPERTIES_FILE_NAME
+                : PROPERTIES_FILE_NAME;
+        try (FileInputStream propertiesFile =
+                     new FileInputStream(filePath)
+        ) {
+            Properties property = new Properties();
+            property.load(propertiesFile);
+
+            bufferSize.set(Integer.parseInt(property.getProperty("numberOfLinesReadFromFilePerRequest")));
+            saveTmpFiles.set(Boolean.parseBoolean(property.getProperty("saveTmpFiles")));
+            withoutSpaces.set(Boolean.parseBoolean(property.getProperty("sortedStringWithoutSpaces")));
+        } catch (NumberFormatException e) {
+            System.out.printf("Сan not parse property: %s.\n", e);
+        } catch (IOException e) {
+            System.out.printf("Сan not find file %s. Start with default settings.\n", filePath);
+        }
     }
 
     private boolean writeToFile(StringBuilder stringToFile, String fileName, boolean append) {

@@ -2,38 +2,16 @@ package ru.beetlerat.shift.mergesort;
 
 import java.util.*;
 
-public class IntSort extends MyMergeSort {
+public class IntSort extends MyMergeSort<Integer> {
     public IntSort() {
         super();
     }
 
     @Override
-    protected List<Queue> createQueue() {
-        List<Queue> newList = new ArrayList<>();
-        newList.add(new ArrayDeque<Integer>());
-        newList.add(new ArrayDeque<Integer>());
-        return newList;
-    }
-
-    @Override
-    protected Collection convertReadDataToCollection(StringBuilder data) {
-        return convertReadDataToArrayList(data);
-    }
-
-    @Override
-    protected Object[] convertReadDataToArray(StringBuilder data) {
-        ArrayList<Integer> intArrayList = convertReadDataToArrayList(data);
-        Integer[] numbersArray = new Integer[intArrayList.size()];
-        for (int i = 0; i < intArrayList.size(); i++) {
-            numbersArray[i] = intArrayList.get(i);
-        }
-        return numbersArray;
-    }
-
-    private ArrayList<Integer> convertReadDataToArrayList(StringBuilder data) {
+    protected ArrayList<Integer> convertReadDataToArrayList(StringBuilder data) {
         String[] stringArray = data.toString().split("\n");
         ArrayList<Integer> intArrayList = new ArrayList<>();
-        if(withoutSpaces){
+        if (withoutSpaces) {
             for (String stringNumber : stringArray) {
                 try {
                     intArrayList.add(Integer.parseInt(stringNumber));
@@ -41,7 +19,7 @@ public class IntSort extends MyMergeSort {
                     System.out.printf("Warning. Can not parse \"%s\" to int. It will not be included in the final result.\n", stringNumber);
                 }
             }
-        }else {
+        } else {
             for (String stringNumber : stringArray) {
                 try {
                     intArrayList.add(Integer.parseInt(stringNumber.trim()));

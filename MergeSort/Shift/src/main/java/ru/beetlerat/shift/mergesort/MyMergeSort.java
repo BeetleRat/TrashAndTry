@@ -5,13 +5,13 @@ import ru.beetlerat.shift.fileaccess.ConventionalFileName;
 
 import java.util.*;
 
-public abstract class MyMergeSort {
+public abstract class MyMergeSort<T> {
     public static final int ASCENDING_SORT = 1;
     public static final int DESCENDING_SORT = -1;
 
-    private final int FIRST_FILE = 0;
-    private final int SECOND_FILE = 1;
-    private final int OUTPUT_FILE = 2;
+    private static final int FIRST_FILE = 0;
+    private static final int SECOND_FILE = 1;
+    private static final int OUTPUT_FILE = 2;
 
     protected int ascendingSort;
     protected boolean withoutSpaces;
@@ -23,34 +23,40 @@ public abstract class MyMergeSort {
     private boolean isFilesStoreInResources;
     private boolean saveTmpFiles;
     private boolean[] isFileEmpty;
-    private List<Queue> fileQueue;
+    private List<Queue<T>> fileQueue;
     private int bufferSize;
 
     public MyMergeSort() {
-        this.bufferSize = 100;
+        this.bufferSize = 10000000;
         this.ascendingSort = ASCENDING_SORT;
         this.saveTmpFiles = false;
-        this.withoutSpaces = false;
-
+        this.withoutSpaces = true;
         this.outputFilePrefix = "";
         this.isFilesStoreInResources = true;
+        this.isFileEmpty = new boolean[2];
         this.dataBuffer = new StringBuilder[3];
         this.dataBuffer[OUTPUT_FILE] = new StringBuilder();
-        this.isFileEmpty = new boolean[2];
         this.accessFile = new AccessFile[3];
         this.outputFilesName = new LinkedList<>();
         for (int i = 0; i < 3; i++) {
             this.accessFile[i] = new AccessFile();
             this.accessFile[i].setFilesStoreInResources(isFilesStoreInResources);
         }
-        this.fileQueue = createQueue();
+        this.fileQueue = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            this.fileQueue.add(new ArrayDeque<>());
+        }
     }
 
-    protected abstract List<Queue> createQueue();
+    protected abstract ArrayList<T> convertReadDataToArrayList(StringBuilder data);
 
-    protected abstract Collection convertReadDataToCollection(StringBuilder data);
+    protected Collection<T> convertReadDataToCollection(StringBuilder data) {
+        return convertReadDataToArrayList(data);
+    }
 
-    protected abstract Object[] convertReadDataToArray(StringBuilder data);
+    protected Object[] convertReadDataToArray(StringBuilder data) {
+        return convertReadDataToArrayList(data).toArray();
+    }
 
     protected abstract Integer compareElements(Object first, Object second);
 
@@ -194,10 +200,7 @@ public abstract class MyMergeSort {
 
         clearOldFileReadData();
 
-        for (int i = 0; i < 8; i++) {
-            System.out.print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-        }
-        System.out.printf("Out of buffer. Perform out merge sort. Current file: %s", outputFileName.getFileName());
+        showCurrentFileName(outputFileName.getFileName());
 
         boolean isFirstCycle = true;
         while (!isFileEmpty[FIRST_FILE] || !isFileEmpty[SECOND_FILE]) {
@@ -266,7 +269,7 @@ public abstract class MyMergeSort {
         return isFirstCycle ? null : outputFileName;
     }
 
-    protected void clearOldFileReadData() {
+    private void clearOldFileReadData() {
         for (int i = 0; i < 3; i++) {
             this.accessFile[i].clearCurrentReadString();
         }
@@ -277,7 +280,14 @@ public abstract class MyMergeSort {
         }
     }
 
-    private StringBuilder arrayToStringBuilder(Object[] array) {
+    private static void showCurrentFileName(String fileName) {
+        for (int i = 0; i < 8; i++) {
+            System.out.print("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
+        }
+        System.out.printf("Out of buffer. Perform out merge sort. Current file: %s", fileName);
+    }
+
+    private static StringBuilder arrayToStringBuilder(Object[] array) {
         StringBuilder stringBuilder = new StringBuilder();
         for (Object object : array) {
             stringBuilder.append(object).append("\n");
@@ -315,7 +325,7 @@ public abstract class MyMergeSort {
     }
 
     public void setBufferSize(int bufferSize) {
-        this.bufferSize = bufferSize;
+        this.bufferSize = bufferSize > 0 ? bufferSize : 10;
     }
 
     public void setFilesStoreInResources(boolean filesStoreInResources) {

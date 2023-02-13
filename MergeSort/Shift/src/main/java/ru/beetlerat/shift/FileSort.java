@@ -1,10 +1,15 @@
 package ru.beetlerat.shift;
 
+import ru.beetlerat.shift.fileaccess.AccessFile;
 import ru.beetlerat.shift.mergesort.IntSort;
 import ru.beetlerat.shift.mergesort.MyMergeSort;
 import ru.beetlerat.shift.mergesort.StringSort;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class FileSort {
     private final int SORT_TYPE = 0;
@@ -15,13 +20,11 @@ public class FileSort {
     private List<String> inputFilesName;
     private boolean[] hasFlag;
     private MyMergeSort myMergeSort;
-    private int bufferSize;
     private boolean isFilesStoreInResources;
 
-    public FileSort(String[] sortParams, int bufferSize, boolean isFilesStoreInResources) {
-        this.bufferSize = bufferSize > 1 ? bufferSize : 10;
-        this.hasFlag = new boolean[4];
+    public FileSort(String[] sortParams, boolean isFilesStoreInResources) {
         this.isFilesStoreInResources = isFilesStoreInResources;
+        this.hasFlag = new boolean[4];
         this.inputFilesName = new ArrayList<>();
 
 
@@ -36,6 +39,7 @@ public class FileSort {
             System.out.printf("Invalid args: %s\nPlease enter the flags according to the template: sort-it.exe -d -s output.txt input1.txt input2.txt", errorMessage);
         }
     }
+
 
     // 1. режим сортировки (-a или -d), необязательный, по умолчанию сортируем по возрастанию;
     // 2. тип данных (-s или -i), обязательный;
@@ -78,17 +82,29 @@ public class FileSort {
                             hasFlag[INPUT_FILE] = true;
                             inputFilesName.add(param);
                         }
+                    } else {
+                        System.out.printf("Unknown parameter: \"%s\"\n", param);
                     }
             }
         }
 
+
         if (this.myMergeSort != null) {
-            this.myMergeSort.setAscendingSort(ascendingSort);
             this.myMergeSort.setFilesStoreInResources(isFilesStoreInResources);
-            this.myMergeSort.setBufferSize(bufferSize);
+            this.myMergeSort.setAscendingSort(ascendingSort);
             this.myMergeSort.setOutputFilePrefix(outputFileNamePrefix);
-            this.myMergeSort.setSaveTmpFiles(false);
-            this.myMergeSort.setWithoutSpaces(true);
+
+            // Достаем значения конфигурационного файла
+            AtomicInteger bufferSize = new AtomicInteger(1);
+            AtomicBoolean saveTmpFiles = new AtomicBoolean(false);
+            AtomicBoolean withoutSpaces = new AtomicBoolean(false);
+            AccessFile accessFile = new AccessFile();
+            accessFile.setFilesStoreInResources(isFilesStoreInResources);
+            accessFile.readProperties(bufferSize, saveTmpFiles, withoutSpaces);
+
+            this.myMergeSort.setBufferSize(bufferSize.intValue());
+            this.myMergeSort.setSaveTmpFiles(saveTmpFiles.get());
+            this.myMergeSort.setWithoutSpaces(withoutSpaces.get());
         }
         return hasFlag[DATA_TYPE] & hasFlag[OUTPUT_FILE] & hasFlag[INPUT_FILE];
     }

@@ -2,35 +2,13 @@ package ru.beetlerat.shift.mergesort;
 
 import java.util.*;
 
-public class StringSort extends MyMergeSort {
+public class StringSort extends MyMergeSort<String> {
     public StringSort() {
         super();
     }
 
     @Override
-    protected List<Queue> createQueue() {
-        List<Queue> newList = new ArrayList<>();
-        newList.add(new ArrayDeque<String>());
-        newList.add(new ArrayDeque<String>());
-        return newList;
-    }
-
-    @Override
-    protected Collection<String> convertReadDataToCollection(StringBuilder data) {
-        return convertReadDataToArrayList(data);
-    }
-
-    @Override
-    protected Object[] convertReadDataToArray(StringBuilder data) {
-        ArrayList<String> stringArrayList = convertReadDataToArrayList(data);
-        String[] stringsArray = new String[stringArrayList.size()];
-        for (int i = 0; i < stringArrayList.size(); i++) {
-            stringsArray[i] = stringArrayList.get(i);
-        }
-        return stringsArray;
-    }
-
-    private ArrayList<String> convertReadDataToArrayList(StringBuilder data) {
+    protected ArrayList<String> convertReadDataToArrayList(StringBuilder data) {
         ArrayList<String> stringList = new ArrayList<>(List.of(data.toString().split("\n")));
         if (withoutSpaces) {
             for (int i = stringList.size() - 1; i >= 0; i--) {
