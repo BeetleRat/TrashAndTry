@@ -6,7 +6,7 @@ import ru.beetlerat.shift.utill.DataConverter;
 
 import java.util.*;
 
-public abstract class MyMergeSort<T> {
+public abstract class MyMergeSort<T extends Comparable<T>> {
     public static final int ASCENDING_SORT = 1;
     public static final int DESCENDING_SORT = -1;
 
@@ -50,6 +50,7 @@ public abstract class MyMergeSort<T> {
     }
 
     protected abstract ArrayList<T> convertReadDataToArrayList(StringBuilder data);
+
     protected abstract Integer compareElements(Object first, Object second);
 
     public void sort(List<String> inputFilesName) {
@@ -181,9 +182,12 @@ public abstract class MyMergeSort<T> {
                 }
             }
         }
+
         String outputFileName = outputFilePrefix + ".txt";
-        if (accessFile[OUTPUT_FILE].renameFile(outputFilesName.get(index).getFileName(), outputFileName)) {
+        if (outputFilesName.size() > 0 && accessFile[OUTPUT_FILE].renameFile(outputFilesName.get(index).getFileName(), outputFileName)) {
             System.out.printf("\nProgram completed. Results in file: %s", outputFileName);
+        } else {
+            System.out.println("\nProgram ended with errors. No sorted data.");
         }
         accessFile[OUTPUT_FILE].clearCurrentReadString();
     }
@@ -205,10 +209,10 @@ public abstract class MyMergeSort<T> {
         boolean isFirstCycle = true;
         while (!isFileEmpty[FIRST_FILE] || !isFileEmpty[SECOND_FILE]) {
             int outputBuilderLinesCount = 0;
-            while (outputBuilderLinesCount < bufferSize) {
+            while (outputBuilderLinesCount < bufferSize / 2) {
                 if (fileQueue.get(FIRST_FILE).isEmpty()) {
                     if (!isFileEmpty[FIRST_FILE]) {
-                        if ((dataBuffer[FIRST_FILE] = accessFile[FIRST_FILE].readFromFile(bufferSize / 2, fileName1.getFileName())) == null) {
+                        if ((dataBuffer[FIRST_FILE] = accessFile[FIRST_FILE].readFromFile(bufferSize / 4, fileName1.getFileName())) == null) {
                             isFileEmpty[FIRST_FILE] = true;
                         } else {
                             fileQueue.get(FIRST_FILE).addAll(convertReadDataToCollection(dataBuffer[FIRST_FILE]));
@@ -216,7 +220,7 @@ public abstract class MyMergeSort<T> {
                     } else {
                         if (fileQueue.get(SECOND_FILE).isEmpty()) {
                             if (!isFileEmpty[SECOND_FILE]) {
-                                if ((dataBuffer[SECOND_FILE] = accessFile[SECOND_FILE].readFromFile(bufferSize / 2, fileName2.getFileName())) == null) {
+                                if ((dataBuffer[SECOND_FILE] = accessFile[SECOND_FILE].readFromFile(bufferSize / 4, fileName2.getFileName())) == null) {
                                     isFileEmpty[SECOND_FILE] = true;
                                 } else {
                                     fileQueue.get(SECOND_FILE).addAll(convertReadDataToCollection(dataBuffer[SECOND_FILE]));
@@ -232,7 +236,7 @@ public abstract class MyMergeSort<T> {
                 } else {
                     if (fileQueue.get(SECOND_FILE).isEmpty()) {
                         if (!isFileEmpty[SECOND_FILE]) {
-                            if ((dataBuffer[SECOND_FILE] = accessFile[SECOND_FILE].readFromFile(bufferSize / 2, fileName2.getFileName())) == null) {
+                            if ((dataBuffer[SECOND_FILE] = accessFile[SECOND_FILE].readFromFile(bufferSize / 4, fileName2.getFileName())) == null) {
                                 isFileEmpty[SECOND_FILE] = true;
                             } else {
                                 fileQueue.get(SECOND_FILE).addAll(convertReadDataToCollection(dataBuffer[SECOND_FILE]));
@@ -287,8 +291,6 @@ public abstract class MyMergeSort<T> {
         System.out.printf("Out of buffer. Perform out merge sort. Current file: %s", fileName);
     }
 
-
-
     public int getAscendingSort() {
         return ascendingSort;
     }
@@ -318,7 +320,7 @@ public abstract class MyMergeSort<T> {
     }
 
     public void setBufferSize(int bufferSize) {
-        this.bufferSize = bufferSize > 0 ? bufferSize : 10;
+        this.bufferSize = Math.max(bufferSize, 16);
     }
 
     public void setFilesStoreInResources(boolean filesStoreInResources) {

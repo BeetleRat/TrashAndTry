@@ -99,7 +99,7 @@ public class FileSort {
             accessFile.setFilesStoreInResources(isFilesStoreInResources);
             Map<String,String> properties=accessFile.readProperties();
 
-            int bufferSize=25;
+            int bufferSize=250000000;
             try {
                 bufferSize=Integer.parseInt(properties.get("bufferSize"));
             }catch (NumberFormatException e){
