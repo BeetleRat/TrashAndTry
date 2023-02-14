@@ -7,11 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.*;
 
 public class AccessFile {
     private static final String PROPERTIES_FILE_NAME = "application.properties";
@@ -141,11 +137,12 @@ public class AccessFile {
         return file.renameTo(renamedFile);
     }
 
-    public void readProperties(AtomicInteger bufferSize, AtomicBoolean saveTmpFiles, AtomicBoolean withoutSpaces) {
+    public Map<String,String> readProperties() {
         // Устанавливаем значения по умолчанию
-        bufferSize.set(2500000);
-        saveTmpFiles.set(false);
-        withoutSpaces.set(true);
+        Map<String,String> properties=new HashMap<>();
+        properties.put("bufferSize","2500000");
+        properties.put("saveTmpFiles","false");
+        properties.put("withoutSpaces","true");
 
         // Считываем значения из свойств
         String filePath = isFilesStoreInResources
@@ -157,14 +154,13 @@ public class AccessFile {
             Properties property = new Properties();
             property.load(propertiesFile);
 
-            bufferSize.set(Integer.parseInt(property.getProperty("numberOfLinesReadFromFilePerRequest")));
-            saveTmpFiles.set(Boolean.parseBoolean(property.getProperty("saveTmpFiles")));
-            withoutSpaces.set(Boolean.parseBoolean(property.getProperty("sortedStringWithoutSpaces")));
-        } catch (NumberFormatException e) {
-            System.out.printf("Сan not parse property: %s.\n", e);
+            properties.put("bufferSize",property.getProperty("numberOfLinesReadFromFilePerRequest".trim()));
+            properties.put("saveTmpFiles",property.getProperty("saveTmpFiles".trim()));
+            properties.put("withoutSpaces",property.getProperty("sortedStringWithoutSpaces".trim()));
         } catch (IOException e) {
             System.out.printf("Сan not find file %s. Start with default settings.\n", filePath);
         }
+        return properties;
     }
 
     private boolean writeToFile(StringBuilder stringToFile, String fileName, boolean append) {

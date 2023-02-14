@@ -12,10 +12,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class FileSort {
-    private final int SORT_TYPE = 0;
-    private final int DATA_TYPE = 1;
-    private final int OUTPUT_FILE = 2;
-    private final int INPUT_FILE = 3;
+    private static final int SORT_TYPE = 0;
+    private static final int DATA_TYPE = 1;
+    private static final int OUTPUT_FILE = 2;
+    private static final int INPUT_FILE = 3;
 
     private List<String> inputFilesName;
     private boolean[] hasFlag;
@@ -95,16 +95,20 @@ public class FileSort {
             this.myMergeSort.setOutputFilePrefix(outputFileNamePrefix);
 
             // Достаем значения конфигурационного файла
-            AtomicInteger bufferSize = new AtomicInteger(1);
-            AtomicBoolean saveTmpFiles = new AtomicBoolean(false);
-            AtomicBoolean withoutSpaces = new AtomicBoolean(false);
             AccessFile accessFile = new AccessFile();
             accessFile.setFilesStoreInResources(isFilesStoreInResources);
-            accessFile.readProperties(bufferSize, saveTmpFiles, withoutSpaces);
+            Map<String,String> properties=accessFile.readProperties();
 
-            this.myMergeSort.setBufferSize(bufferSize.intValue());
-            this.myMergeSort.setSaveTmpFiles(saveTmpFiles.get());
-            this.myMergeSort.setWithoutSpaces(withoutSpaces.get());
+            int bufferSize=25;
+            try {
+                bufferSize=Integer.parseInt(properties.get("bufferSize"));
+            }catch (NumberFormatException e){
+                System.out.printf("Can not parse property bufferSize: %s\n",properties.get("bufferSize"));
+            }
+
+            this.myMergeSort.setBufferSize(bufferSize);
+            this.myMergeSort.setSaveTmpFiles(Boolean.parseBoolean(properties.get("saveTmpFiles")));
+            this.myMergeSort.setWithoutSpaces(Boolean.parseBoolean(properties.get("withoutSpaces")));
         }
         return hasFlag[DATA_TYPE] & hasFlag[OUTPUT_FILE] & hasFlag[INPUT_FILE];
     }

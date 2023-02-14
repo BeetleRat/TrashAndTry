@@ -2,6 +2,7 @@ package ru.beetlerat.shift.mergesort;
 
 import ru.beetlerat.shift.fileaccess.AccessFile;
 import ru.beetlerat.shift.fileaccess.ConventionalFileName;
+import ru.beetlerat.shift.utill.DataConverter;
 
 import java.util.*;
 
@@ -49,15 +50,6 @@ public abstract class MyMergeSort<T> {
     }
 
     protected abstract ArrayList<T> convertReadDataToArrayList(StringBuilder data);
-
-    protected Collection<T> convertReadDataToCollection(StringBuilder data) {
-        return convertReadDataToArrayList(data);
-    }
-
-    protected Object[] convertReadDataToArray(StringBuilder data) {
-        return convertReadDataToArrayList(data).toArray();
-    }
-
     protected abstract Integer compareElements(Object first, Object second);
 
     public void sort(List<String> inputFilesName) {
@@ -67,11 +59,19 @@ public abstract class MyMergeSort<T> {
         outMergeSort();
     }
 
+    private Collection<T> convertReadDataToCollection(StringBuilder data) {
+        return convertReadDataToArrayList(data);
+    }
+
+    private Object[] convertReadDataToArray(StringBuilder data) {
+        return convertReadDataToArrayList(data).toArray();
+    }
+
     private void createTmpFiles(List<String> inputFilesName) {
         StringBuilder sortSting;
         while ((sortSting = accessFile[FIRST_FILE].readFromFiles(bufferSize, inputFilesName)) != null) {
 
-            StringBuilder resultSting = arrayToStringBuilder(mergeSort(convertReadDataToArray(sortSting)));
+            StringBuilder resultSting = DataConverter.arrayToStringBuilder(mergeSort(convertReadDataToArray(sortSting)));
 
             ConventionalFileName tempFileName = ConventionalFileName.createConventionalFileNameFromStringBuilder(resultSting, outputFilePrefix, outputFilesName.size());
 
@@ -287,14 +287,7 @@ public abstract class MyMergeSort<T> {
         System.out.printf("Out of buffer. Perform out merge sort. Current file: %s", fileName);
     }
 
-    private static StringBuilder arrayToStringBuilder(Object[] array) {
-        StringBuilder stringBuilder = new StringBuilder();
-        for (Object object : array) {
-            stringBuilder.append(object).append("\n");
-        }
-        stringBuilder.setLength(stringBuilder.length() - 1);
-        return stringBuilder;
-    }
+
 
     public int getAscendingSort() {
         return ascendingSort;
