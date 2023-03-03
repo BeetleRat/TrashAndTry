@@ -12,8 +12,8 @@ public class ListStringSerialize extends ListRand {
     public void Serialize(FileOutputStream s) {
         nodesDTO = new NodeDTO[Count];
         setDTOPrevNextPointers(Head, 0);
-        setRandPointers();
-        writeSaveStructsToFile(s);
+        setDTORandPointers();
+        writeDTOToFile(s);
         nodesDTO = null;
     }
 
@@ -31,7 +31,7 @@ public class ListStringSerialize extends ListRand {
         setDTOPrevNextPointers(currentNode.Next, currentIndex + 1);
     }
 
-    private void setRandPointers() {
+    private void setDTORandPointers() {
         ListNode elementWithBrokenLink = Head;
         ListNode currentElement = Head;
         int elementWithBrokenLinkIndex = 0;
@@ -53,7 +53,7 @@ public class ListStringSerialize extends ListRand {
         }
     }
 
-    private void writeSaveStructsToFile(FileOutputStream s) {
+    private void writeDTOToFile(FileOutputStream s) {
         try {
             BufferedWriter writeFileBuffer =
                     new BufferedWriter(
@@ -78,7 +78,7 @@ public class ListStringSerialize extends ListRand {
         nodesDTO = null;
         ReadNodesDTOFromFile(s);
         setPrevNextPointers(0);
-        restoreRandomLinks();
+        setRandPointers();
         nodesDTO = null;
     }
 
@@ -98,7 +98,7 @@ public class ListStringSerialize extends ListRand {
         setPrevNextPointers(currentIndex + 1);
     }
 
-    private void restoreRandomLinks() {
+    private void setRandPointers() {
         ListNode elementWithBrokenLink = Head;
         ListNode currentElement = Head;
         int elementWithBrokenLinkIndex = 0;
@@ -129,20 +129,23 @@ public class ListStringSerialize extends ListRand {
                             new InputStreamReader(
                                     s, StandardCharsets.UTF_8)
                     );
+
             String oneLine;
-            StringBuilder sevenLines = new StringBuilder();
+            StringBuilder json = new StringBuilder();
             boolean isJsonFound = false;
             while ((oneLine = readFileBuffer.readLine()) != null) {
+                // Файл должен начинастья с "Count: "
                 if (nodesDTO == null && oneLine.contains("Count: ")) {
                     int count = Integer.parseInt(oneLine.substring(oneLine.indexOf(":") + 1).trim());
                     nodesDTO = new NodeDTO[count];
                     Count = count;
                 } else {
+                    // Проверка корректности сохраненного JSON
                     if (oneLine.equals("{")) {
                         isJsonFound = true;
                     }
                     if (isJsonFound) {
-                        isJsonFound = accumulateJSON(sevenLines, oneLine);
+                        isJsonFound = accumulateJSON(json, oneLine);
                     }
                     if (oneLine.equals("}")) {
                         isJsonFound = false;
@@ -155,14 +158,19 @@ public class ListStringSerialize extends ListRand {
         }
     }
 
-    private boolean accumulateJSON(StringBuilder sevenLines, String oneLine) {
-        sevenLines.append(oneLine).append("\n");
-        if (sevenLines.toString().split("\n").length >= 6) {
-            NodeDTO newNode = parseFromJSON(sevenLines.toString());
+    private boolean accumulateJSON(StringBuilder json, String oneLine) {
+        // Накапливаем строки в JSON
+        json.append(oneLine).append("\n");
+        // Если в JSON 6 и больше строк
+        if (json.toString().split("\n").length >= 6) {
+            // Парсим строковый JSON в DTO
+            NodeDTO newNode = parseFromJSON(json.toString());
+            // Если корректно спарсилось, сохраняем в массив DTO
             if (newNode != null && newNode.ID >= 0 && newNode.ID < nodesDTO.length) {
                 nodesDTO[newNode.ID] = newNode;
             }
-            sevenLines.setLength(0);
+            // Очищаем строку JSON
+            json.setLength(0);
             return false;
         }
         return true;
