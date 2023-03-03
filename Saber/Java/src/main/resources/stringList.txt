@@ -1,0 +1,43 @@
+Count: 6
+{
+   "ID": 0
+   "Data": Peter
+   "PreviousID": -1
+   "NextID": 1
+   "RandID": 4
+}
+{
+   "ID": 1
+   "Data": Vasiliy
+   "PreviousID": 0
+   "NextID": 2
+   "RandID": 0
+}
+{
+   "ID": 2
+   "Data": George
+   "PreviousID": 1
+   "NextID": 3
+   "RandID": 2
+}
+{
+   "ID": 3
+   "Data": Ivan
+   "PreviousID": 2
+   "NextID": 4
+   "RandID": 2
+}
+{
+   "ID": 4
+   "Data": Egor
+   "PreviousID": 3
+   "NextID": 5
+   "RandID": 2
+}
+{
+   "ID": 5
+   "Data": Sofia
+   "PreviousID": 4
+   "NextID": -1
+   "RandID": -1
+}

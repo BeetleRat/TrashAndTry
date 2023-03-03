@@ -8,17 +8,7 @@ public abstract class ListRand {
     public ListNode Tail;
     public int Count;
 
-    public void Serialize(FileOutputStream s) {
-        try {
-            ObjectOutputStream oos = new ObjectOutputStream(s);
-            recursiveSerialize(Head, oos);
-            oos.close();
-        } catch (IOException e) {
-            System.out.println("ObjectOutputStream exception: " + e);
-        }
-    }
-
-    protected abstract void recursiveSerialize(ListNode currentNode, ObjectOutputStream oos) throws IOException;
+    public abstract void Serialize(FileOutputStream s);
 
     public abstract void Deserialize(FileInputStream s);
 
@@ -67,6 +57,7 @@ public abstract class ListRand {
 
     public void clear() {
         clear(Head);
+        Count=0;
     }
 
     private void clear(ListNode currentNode) {

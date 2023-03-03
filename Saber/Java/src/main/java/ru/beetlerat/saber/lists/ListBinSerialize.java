@@ -14,8 +14,7 @@ public class ListBinSerialize extends ListRand {
         }
     }
 
-    @Override
-    protected void recursiveSerialize(ListNode currentNode, ObjectOutputStream oos) throws IOException {
+    private void recursiveSerialize(ListNode currentNode, ObjectOutputStream oos) throws IOException {
         if (currentNode == null) {
             return;
         }
@@ -34,9 +33,11 @@ public class ListBinSerialize extends ListRand {
                 if (Head == null) {
                     Head = newNode;
                     Tail = newNode;
+                    Count = 0;
                 } else {
                     Tail = newNode;
                 }
+                Count++;
             }
 
         } catch (ClassNotFoundException e) {

@@ -2,6 +2,7 @@ package main.java.ru.beetlerat.saber;
 
 import main.java.ru.beetlerat.saber.lists.ListBinSerialize;
 import main.java.ru.beetlerat.saber.lists.ListRand;
+import main.java.ru.beetlerat.saber.lists.ListStringSerialize;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -12,17 +13,16 @@ public class Main {
     public static void main(String[] args) {
         boolean isNewList = false;
 
-        ListRand list = createRandList(isNewList);
-        fileWork(isNewList, list,"src/main/resources/list.txt");
+        ListRand list1 = createRandList(isNewList, new ListStringSerialize());
+        fileWork(isNewList, list1, "src/main/resources/stringList.txt");
     }
 
-    private static ListRand createRandList(boolean isNewList) {
-        ListRand list = new ListBinSerialize();
+    private static ListRand createRandList(boolean isNewList, ListRand listImplementation) {
         if (isNewList) {
-            list.add("Peter", "Vasiliy", "George", "Ivan", "Egor");
-            list.add("Sofia", true);
+            listImplementation.add("Peter", "Vasiliy", "George", "Ivan", "Egor");
+            listImplementation.add("Sofia", true);
         }
-        return list;
+        return listImplementation;
     }
 
     private static void fileWork(boolean serializeNewList, ListRand list, String fileName) {
