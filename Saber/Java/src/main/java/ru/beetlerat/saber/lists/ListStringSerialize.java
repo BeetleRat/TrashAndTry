@@ -5,49 +5,70 @@ import java.nio.charset.StandardCharsets;
 
 public class ListStringSerialize extends ListRand {
 
-    private static final int NO_LINK = -1, BROKEN_LINK = -2;
-    NodeDTO[] nodesDTO;
+    private static final int NO_LINK = -1;
+    int[] randLinks;
 
     @Override
     public void Serialize(FileOutputStream s) {
-        nodesDTO = new NodeDTO[Count];
-        setDTOPointers();
-        writeDTOToFile(s);
-        nodesDTO = null;
+        try {
+            BufferedWriter writeFileBuffer =
+                    new BufferedWriter(
+                            new OutputStreamWriter(
+                                    s, StandardCharsets.UTF_8)
+                    );
+
+            writeFileBuffer.write("Count: " + Count + "\n");
+            executeSerialize(writeFileBuffer);
+
+            writeFileBuffer.close();
+        } catch (IOException e) {
+            System.out.println("Write to file exception: " + e);
+        }
+
     }
 
-    private void setDTOPointers() {
+    private void executeSerialize(BufferedWriter writeFileBuffer) throws IOException {
         ListNode saveElement = Head;
-        ListNode linkElement = Head;
         int saveElementIndex = 0;
+        ListNode linkElement = Head;
         int linkElementIndex = 0;
         while (saveElementIndex < Count) {
+
             if (saveElement.Rand == null) {
-                nodesDTO[saveElementIndex] =
+
+                // Сразу записываем DTO в файл
+                writeFileBuffer.write(
                         new NodeDTO(
                                 saveElementIndex,
                                 saveElement.Data,
                                 saveElementIndex - 1,
                                 saveElement.Next == null ? -1 : saveElementIndex + 1,
                                 NO_LINK
-                        );
+                        ).toString()
+                );
+
                 saveElementIndex++;
                 saveElement = saveElement.Next;
             } else {
+                // Удаление битой ссылки
                 if (linkElementIndex >= Count) {
                     linkElementIndex = 0;
                     linkElement = Head;
                     saveElement.Rand = null;
                 }
+
                 if (linkElement == saveElement.Rand) {
-                    nodesDTO[saveElementIndex] =
-                            new NodeDTO(
+
+                    // Сразу записываем DTO в файл
+                    writeFileBuffer.write(new NodeDTO(
                                     saveElementIndex,
                                     saveElement.Data,
                                     saveElementIndex - 1,
                                     saveElement.Next == null ? -1 : saveElementIndex + 1,
                                     linkElementIndex
-                            );
+                            ).toString()
+                    );
+
                     saveElementIndex++;
                     saveElement = saveElement.Next;
                     linkElement = Head;
@@ -60,62 +81,31 @@ public class ListStringSerialize extends ListRand {
         }
     }
 
-    private void writeDTOToFile(FileOutputStream s) {
-        try {
-            BufferedWriter writeFileBuffer =
-                    new BufferedWriter(
-                            new OutputStreamWriter(
-                                    s, StandardCharsets.UTF_8)
-                    );
-
-            writeFileBuffer.write("Count: " + nodesDTO.length + "\n");
-            for (NodeDTO struct : nodesDTO) {
-                writeFileBuffer.write(struct.toString());
-            }
-
-            writeFileBuffer.close();
-        } catch (IOException e) {
-            System.out.println("Write to file exception: " + e);
-        }
-    }
-
     @Override
     public void Deserialize(FileInputStream s) {
         clear();
-        nodesDTO = null;
-        ReadNodesDTOFromFile(s);
-        setPrevNextPointers(0);
+        randLinks = null;
+        readListFromFile(s);
         setRandPointers();
-        nodesDTO = null;
-    }
-
-    private void setPrevNextPointers(int currentIndex) {
-        if (currentIndex >= Count) {
-            return;
-        }
-        ListNode newNode = new ListNode();
-        if (currentIndex == 0) {
-            Head = newNode;
-        } else {
-            newNode.Prev = Tail;
-            Tail.Next = newNode;
-        }
-        Tail = newNode;
-        newNode.Data = nodesDTO[currentIndex].Data;
-        setPrevNextPointers(currentIndex + 1);
+        randLinks = null;
     }
 
     private void setRandPointers() {
         ListNode elementWithBrokenLink = Head;
-        ListNode currentElement = Head;
         int elementWithBrokenLinkIndex = 0;
+        ListNode currentElement = Head;
         int currentElementIndex = 0;
+
         while (elementWithBrokenLinkIndex < Count) {
-            if (nodesDTO[elementWithBrokenLinkIndex].RandID != NO_LINK) {
-                if (currentElementIndex == nodesDTO[elementWithBrokenLinkIndex].RandID) {
+
+            if (randLinks[elementWithBrokenLinkIndex] != NO_LINK) {
+
+                if (currentElementIndex == randLinks[elementWithBrokenLinkIndex]) {
                     elementWithBrokenLink.Rand = currentElement;
+
                     currentElement = Head;
                     currentElementIndex = 0;
+
                     elementWithBrokenLinkIndex++;
                     elementWithBrokenLink = elementWithBrokenLink.Next;
                 } else {
@@ -129,7 +119,7 @@ public class ListStringSerialize extends ListRand {
         }
     }
 
-    private void ReadNodesDTOFromFile(FileInputStream s) {
+    private void readListFromFile(FileInputStream s) {
         try {
             BufferedReader readFileBuffer =
                     new BufferedReader(
@@ -142,10 +132,12 @@ public class ListStringSerialize extends ListRand {
             boolean isJsonFound = false;
             while ((oneLine = readFileBuffer.readLine()) != null) {
                 // Файл должен начинастья с "Count: "
-                if (nodesDTO == null && oneLine.contains("Count: ")) {
-                    int count = Integer.parseInt(oneLine.substring(oneLine.indexOf(":") + 1).trim());
-                    nodesDTO = new NodeDTO[count];
-                    Count = count;
+                if (randLinks == null) {
+                    if (oneLine.contains("Count: ")) {
+                        int count = Integer.parseInt(oneLine.substring(oneLine.indexOf(":") + 1).trim());
+                        randLinks = new int[count];
+                        Count = count;
+                    }
                 } else {
                     // Проверка корректности сохраненного JSON
                     if (oneLine.equals("{")) {
@@ -172,15 +164,28 @@ public class ListStringSerialize extends ListRand {
         if (json.toString().split("\n").length >= 6) {
             // Парсим строковый JSON в DTO
             NodeDTO newNode = parseFromJSON(json.toString());
-            // Если корректно спарсилось, сохраняем в массив DTO
-            if (newNode != null && newNode.ID >= 0 && newNode.ID < nodesDTO.length) {
-                nodesDTO[newNode.ID] = newNode;
+            // Если корректно спарсилось, сохраняем без ссылки Rand
+            if (newNode != null && newNode.ID >= 0 && newNode.ID < randLinks.length) {
+                addWithoutRandLink(newNode);
             }
             // Очищаем строку JSON
             json.setLength(0);
             return false;
         }
         return true;
+    }
+
+    private void addWithoutRandLink(NodeDTO nodeDTO) {
+        ListNode newNode = new ListNode();
+        newNode.Data = nodeDTO.Data;
+        if (nodeDTO.ID == 0) {
+            Head = newNode;
+        } else {
+            newNode.Prev = Tail;
+            Tail.Next = newNode;
+        }
+        Tail = newNode;
+        randLinks[nodeDTO.ID] = nodeDTO.RandID;
     }
 
     private NodeDTO parseFromJSON(String json) {
