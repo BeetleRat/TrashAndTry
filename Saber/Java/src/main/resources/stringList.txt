@@ -4,21 +4,21 @@ Count: 6
    "Data": Peter
    "PreviousID": -1
    "NextID": 1
-   "RandID": 3
+   "RandID": 0
 }
 {
    "ID": 1
    "Data": Vasiliy
    "PreviousID": 0
    "NextID": 2
-   "RandID": 3
+   "RandID": 0
 }
 {
    "ID": 2
    "Data": George
    "PreviousID": 1
    "NextID": 3
-   "RandID": 3
+   "RandID": -1
 }
 {
    "ID": 3
@@ -39,5 +39,5 @@ Count: 6
    "Data": Sofia
    "PreviousID": 4
    "NextID": -1
-   "RandID": -1
+   "RandID": 4
 }

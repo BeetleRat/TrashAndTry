@@ -17,13 +17,12 @@ public abstract class ListRand {
         node.Data = data;
         if (Head == null) {
             Head = node;
-            Tail = node;
             Count = 0;
         } else {
             Tail.Next = node;
             node.Prev = Tail;
-            Tail = node;
         }
+        Tail = node;
         Count++;
     }
 
@@ -45,7 +44,7 @@ public abstract class ListRand {
             return;
         }
         ListNode currentNode = Head;
-        while (currentNode.Next != null) {
+        while (currentNode != null) {
             int randomIndex = ThreadLocalRandom.current().nextInt(Count + 1);
             currentNode.Rand =
                     randomIndex == Count
@@ -57,7 +56,7 @@ public abstract class ListRand {
 
     public void clear() {
         clear(Head);
-        Count=0;
+        Count = 0;
     }
 
     private void clear(ListNode currentNode) {

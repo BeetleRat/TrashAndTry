@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
-        boolean isNewList = false;
+        boolean isNewList = true;
 
         ListRand list1 = createRandList(isNewList, new ListStringSerialize());
         fileWork(isNewList, list1, "src/main/resources/stringList.txt");

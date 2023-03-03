@@ -11,44 +11,51 @@ public class ListStringSerialize extends ListRand {
     @Override
     public void Serialize(FileOutputStream s) {
         nodesDTO = new NodeDTO[Count];
-        setDTOPrevNextPointers(Head, 0);
-        setDTORandPointers();
+        setDTOPointers();
         writeDTOToFile(s);
         nodesDTO = null;
     }
 
-    private void setDTOPrevNextPointers(ListNode currentNode, int currentIndex) {
-        if (currentNode == null) {
-            return;
-        }
-        nodesDTO[currentIndex] =
-                new NodeDTO(
-                        currentIndex,
-                        currentNode.Data,
-                        currentIndex - 1,
-                        currentNode.Next == null ? NO_LINK : currentIndex + 1,
-                        currentNode.Rand == null ? NO_LINK : BROKEN_LINK);
-        setDTOPrevNextPointers(currentNode.Next, currentIndex + 1);
-    }
-
-    private void setDTORandPointers() {
-        ListNode elementWithBrokenLink = Head;
-        ListNode currentElement = Head;
-        int elementWithBrokenLinkIndex = 0;
-        int currentElementIndex = 0;
-        while (elementWithBrokenLinkIndex < Count) {
-            if (nodesDTO[elementWithBrokenLinkIndex].RandID == BROKEN_LINK) {
-                if (currentElement == elementWithBrokenLink.Rand) {
-                    nodesDTO[elementWithBrokenLinkIndex].RandID = currentElementIndex;
-                    currentElement = Head;
-                    currentElementIndex = 0;
-                } else {
-                    currentElementIndex++;
-                    currentElement = currentElement.Next;
-                }
+    private void setDTOPointers() {
+        ListNode saveElement = Head;
+        ListNode linkElement = Head;
+        int saveElementIndex = 0;
+        int linkElementIndex = 0;
+        while (saveElementIndex < Count) {
+            if (saveElement.Rand == null) {
+                nodesDTO[saveElementIndex] =
+                        new NodeDTO(
+                                saveElementIndex,
+                                saveElement.Data,
+                                saveElementIndex - 1,
+                                saveElement.Next == null ? -1 : saveElementIndex + 1,
+                                NO_LINK
+                        );
+                saveElementIndex++;
+                saveElement = saveElement.Next;
             } else {
-                elementWithBrokenLink = elementWithBrokenLink.Next;
-                elementWithBrokenLinkIndex++;
+                if (linkElementIndex >= Count) {
+                    linkElementIndex = 0;
+                    linkElement = Head;
+                    saveElement.Rand = null;
+                }
+                if (linkElement == saveElement.Rand) {
+                    nodesDTO[saveElementIndex] =
+                            new NodeDTO(
+                                    saveElementIndex,
+                                    saveElement.Data,
+                                    saveElementIndex - 1,
+                                    saveElement.Next == null ? -1 : saveElementIndex + 1,
+                                    linkElementIndex
+                            );
+                    saveElementIndex++;
+                    saveElement = saveElement.Next;
+                    linkElement = Head;
+                    linkElementIndex = 0;
+                } else {
+                    linkElementIndex++;
+                    linkElement = linkElement.Next;
+                }
             }
         }
     }
