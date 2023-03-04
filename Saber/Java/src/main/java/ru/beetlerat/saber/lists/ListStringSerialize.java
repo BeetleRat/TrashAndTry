@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 
 public class ListStringSerialize extends ListRand {
 
+
     private static final int NO_LINK = -1;
     int[] randLinks;
 
@@ -193,16 +194,14 @@ public class ListStringSerialize extends ListRand {
         if (lines.length != 6) {
             return null;
         }
-        NodeDTO newNode =
-                new NodeDTO(
-                        parseLineToInt(lines, 1),
-                        parseLineToString(lines, 2),
-                        parseLineToInt(lines, 3),
-                        parseLineToInt(lines, 4),
-                        parseLineToInt(lines, 5)
-                );
 
-        return newNode;
+        return new NodeDTO(
+                parseLineToInt(lines, 1),
+                parseLineToString(lines, 2),
+                parseLineToInt(lines, 3),
+                parseLineToInt(lines, 4),
+                parseLineToInt(lines, 5)
+        );
     }
 
     private static String parseLineToString(String[] lines, int x) {

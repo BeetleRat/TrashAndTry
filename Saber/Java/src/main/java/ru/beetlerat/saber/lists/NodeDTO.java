@@ -7,8 +7,6 @@ public class NodeDTO {
     public int RandID; // произвольный элемент внутри списка
     public String Data;
 
-    private ListNode originalNode;
-
     public NodeDTO(int ID, String data, int prevID, int nextID, int randID) {
         this.ID = ID;
         this.PrevID = prevID;
