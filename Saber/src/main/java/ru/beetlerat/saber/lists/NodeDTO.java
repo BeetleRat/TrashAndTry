@@ -15,7 +15,6 @@ public class NodeDTO {
         this.Data = data;
     }
 
-
     public String toString() {
         StringBuilder json = new StringBuilder();
 

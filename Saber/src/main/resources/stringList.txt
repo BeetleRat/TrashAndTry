@@ -1,1 +1,85 @@
-Count: 0
+Count: 11
+{
+   "ID": 0
+   "Data": Kirill
+   "PreviousID": -1
+   "NextID": 1
+   "RandID": 2
+}
+{
+   "ID": 1
+   "Data": Egor
+   "PreviousID": 0
+   "NextID": 2
+   "RandID": 4
+}
+{
+   "ID": 2
+   "Data": Evgeniy
+   "PreviousID": 1
+   "NextID": 3
+   "RandID": 2
+}
+{
+   "ID": 3
+   "Data": Georg
+   "PreviousID": 2
+   "NextID": 4
+   "RandID": 1
+}
+{
+   "ID": 4
+   "Data": Dante
+   "PreviousID": 3
+   "NextID": 5
+   "RandID": 4
+}
+{
+   "ID": 5
+   "Data": Maria
+   "PreviousID": 4
+   "NextID": 6
+   "RandID": 10
+}
+{
+   "ID": 6
+   "Data": Timur
+   "PreviousID": 5
+   "NextID": 7
+   "RandID": 5
+}
+{
+   "ID": 7
+   "Data": Alena
+   "PreviousID": 6
+   "NextID": 8
+   "RandID": 2
+}
+{
+   "ID": 8
+   "Data": Lev
+   "PreviousID": 7
+   "NextID": 9
+   "RandID": 5
+}
+{
+   "ID": 9
+   "Data": Vladimir
+   "PreviousID": 8
+   "NextID": 10
+   "RandID": 1
+}
+{
+   "ID": 10
+   "Data": Sofia
+   "PreviousID": 9
+   "NextID": 11
+   "RandID": 0
+}
+{
+   "ID": 11
+   "Data": Sofia2
+   "PreviousID": 10
+   "NextID": -1
+   "RandID": 0
+}

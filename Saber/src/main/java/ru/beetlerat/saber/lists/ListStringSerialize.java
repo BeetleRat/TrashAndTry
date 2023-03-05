@@ -4,8 +4,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class ListStringSerialize extends ListRand {
-
-
     private static final int NO_LINK = -1;
     int[] randLinks;
 
