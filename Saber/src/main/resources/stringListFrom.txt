@@ -73,13 +73,6 @@ Count: 11
    "ID": 10
    "Data": Sofia
    "PreviousID": 9
-   "NextID": 11
-   "RandID": 0
-}
-{
-   "ID": 11
-   "Data": Sofia2
-   "PreviousID": 10
    "NextID": -1
    "RandID": 0
 }
