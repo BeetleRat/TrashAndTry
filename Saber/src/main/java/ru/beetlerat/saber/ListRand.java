@@ -1,4 +1,4 @@
-package main.java.ru.beetlerat.saber.lists;
+package main.java.ru.beetlerat.saber;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

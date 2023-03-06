@@ -1,8 +1,5 @@
 package main.java.ru.beetlerat.saber;
 
-
-import main.java.ru.beetlerat.saber.lists.ListRand;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -12,10 +9,10 @@ public class Main {
 
     public static void main(String[] args) {
         ListRand list = new ListRand();
-        System.out.println("New list was created: "+list);
-        fileWork(false,list,"src/main/resources/stringListFrom.txt");
-        System.out.println("List after deserialization: "+list);
-        fileWork(true,list,"src/main/resources/stringListTo.txt");
+        System.out.println("New list was created: " + list);
+        fileWork(false, list, "src/main/resources/stringListFrom.txt");
+        System.out.println("List after deserialization: " + list);
+        fileWork(true, list, "src/main/resources/stringListTo.txt");
     }
 
     // Сериализация/Десериализация
@@ -39,5 +36,4 @@ public class Main {
             System.out.println("Close file exception: " + e);
         }
     }
-
 }
